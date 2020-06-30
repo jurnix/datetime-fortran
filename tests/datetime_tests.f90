@@ -74,6 +74,7 @@ contains
     type(datetime) :: a
     type(timedelta) :: td
     type(clock) :: c
+    type(calendar) :: cal
 
     type(datetime), allocatable :: dtRange(:)
 
@@ -85,7 +86,7 @@ contains
     print *
 
     ! Test counter; modify if adding new tests
-    ntests = 191
+    ntests = 261
 
     call initialize_tests(tests, ntests)
 
@@ -817,69 +818,198 @@ contains
 
     print '(71("-"))'
 
-    ! datetime % yearday()
+    ! datetime(gregorian) % yearday()
 
-    a = datetime(2014, 1, 1)
+    a = datetime(2014, 1, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 1, &
-                      'datetime(2014, 1, 1) % yearday() == 1')
+                      'datetime(2014, 1, 1, gregorian) % yearday() == 1')
     n = n + 1
 
-    a = datetime(2014, 2, 1)
+    a = datetime(2014, 2, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 32, &
-                      'datetime(2014, 2, 1) % yearday() == 32')
+                      'datetime(2014, 2, 1, gregorian) % yearday() == 32')
     n = n + 1
 
-    a = datetime(2014, 3, 1)
+    a = datetime(2014, 3, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 60, &
-                      'datetime(2014, 3, 1) % yearday() == 60')
+                      'datetime(2014, 3, 1, gregorian) % yearday() == 60')
     n = n + 1
 
-    a = datetime(2014, 4, 1)
+    a = datetime(2014, 4, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 91, &
-                      'datetime(2014, 4, 1) % yearday() == 91')
+                      'datetime(2014, 4, 1, gregorian) % yearday() == 91')
     n = n + 1
 
-    a = datetime(2014, 5, 1)
+    a = datetime(2014, 5, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 121, &
-                      'datetime(2014, 5, 1) % yearday() == 121')
+                      'datetime(2014, 5, 1, gregorian) % yearday() == 121')
     n = n + 1
 
-    a = datetime(2014, 6, 1)
+    a = datetime(2014, 6, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 152, &
-                      'datetime(2014, 6, 1) % yearday() == 152')
+                      'datetime(2014, 6, 1, gregorian) % yearday() == 152')
     n = n + 1
 
-    a = datetime(2014, 7, 1)
+    a = datetime(2014, 7, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 182, &
-                      'datetime(2014, 7, 1) % yearday() == 182')
+                      'datetime(2014, 7, 1, gregorian) % yearday() == 182')
     n = n + 1
 
-    a = datetime(2014, 8, 1)
+    a = datetime(2014, 8, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 213, &
-                      'datetime(2014, 8, 1) % yearday() == 213')
+                      'datetime(2014, 8, 1, gregorian) % yearday() == 213')
     n = n + 1
 
-    a = datetime(2014, 9, 1)
+    a = datetime(2014, 9, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 244, &
-                      'datetime(2014, 9, 1) % yearday() == 244')
+                      'datetime(2014, 9, 1, gregorian) % yearday() == 244')
     n = n + 1
 
-    a = datetime(2014, 10, 1)
+    a = datetime(2014, 10, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 274, &
-                      'datetime(2014, 10, 1) % yearday() == 275')
+                      'datetime(2014, 10, 1, gregorian) % yearday() == 275')
     n = n + 1
 
-    a = datetime(2014, 11, 1)
+    a = datetime(2014, 11, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 305, &
-                      'datetime(2014, 11, 1) % yearday() == 305')
+                      'datetime(2014, 11, 1, gregorian) % yearday() == 305')
     n = n + 1
 
-    a = datetime(2014, 12, 1)
+    a = datetime(2014, 12, 1, cal_type=cal_gregorian)
     tests(n) = assert(a % yearday() == 335, &
-                      'datetime(2014, 12, 1) % yearday() == 335')
+                      'datetime(2014, 12, 1, gregorian) % yearday() == 335')
     n = n + 1
 
     print '(71("-"))'
+
+    ! datetime(noleap) % yearday()
+
+    a = datetime(2014, 1, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 1, &
+                      'datetime(2014, 1, 1, noleap) % yearday() == 1')
+    n = n + 1
+
+    a = datetime(2012, 2, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 32, &
+                      'datetime(2012, 2, 1, noleap) % yearday() == 32')
+    n = n + 1
+
+    a = datetime(2014, 3, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 60, &
+                      'datetime(2014, 3, 1, noleap) % yearday() == 60')
+    n = n + 1
+
+    a = datetime(2014, 4, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 91, &
+                      'datetime(2014, 4, 1, noleap) % yearday() == 91')
+    n = n + 1
+
+    a = datetime(2014, 5, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 121, &
+                      'datetime(2014, 5, 1, noleap) % yearday() == 121')
+    n = n + 1
+
+    a = datetime(2014, 6, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 152, &
+                      'datetime(2014, 6, 1, noleap) % yearday() == 152')
+    n = n + 1
+
+    a = datetime(2014, 7, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 182, &
+                      'datetime(2014, 7, 1, noleap) % yearday() == 182')
+    n = n + 1
+
+    a = datetime(2014, 8, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 213, &
+                      'datetime(2014, 8, 1, noleap) % yearday() == 213')
+    n = n + 1
+
+    a = datetime(2014, 9, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 244, &
+                      'datetime(2014, 9, 1, noleap) % yearday() == 244')
+    n = n + 1
+
+    a = datetime(2014, 10, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 274, &
+                      'datetime(2014, 10, 1, noleap) % yearday() == 275')
+    n = n + 1
+
+    a = datetime(2014, 11, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 305, &
+                      'datetime(2014, 11, 1, noleap) % yearday() == 305')
+    n = n + 1
+
+    a = datetime(2014, 12, 1, cal_type=cal_noleap)
+    tests(n) = assert(a % yearday() == 335, &
+                      'datetime(2014, 12, 1, noleap) % yearday() == 335')
+    n = n + 1
+
+    print '(71("-"))'
+
+    ! datetime(360d) % yearday()
+
+    a = datetime(2014, 1, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 1, &
+                      'datetime(2014, 1, 1, 360d) % yearday() == 1')
+    n = n + 1
+
+    a = datetime(2012, 2, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 31, &
+                      'datetime(2012, 2, 1, 360d) % yearday() == 31')
+    n = n + 1
+
+    a = datetime(2014, 3, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 61, &
+                      'datetime(2014, 3, 1, 360d) % yearday() == 61')
+    n = n + 1
+
+    a = datetime(2014, 4, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 91, &
+                      'datetime(2014, 4, 1, 360d) % yearday() == 91')
+    n = n + 1
+
+    a = datetime(2014, 5, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 121, &
+                      'datetime(2014, 5, 1, 360d) % yearday() == 121')
+    n = n + 1
+
+    a = datetime(2014, 6, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 151, &
+                      'datetime(2014, 6, 1, 360d) % yearday() == 151')
+    n = n + 1
+
+    a = datetime(2014, 7, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 181, &
+                      'datetime(2014, 7, 1, 360d) % yearday() == 181')
+    n = n + 1
+
+    a = datetime(2014, 8, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 211, &
+                      'datetime(2014, 8, 1, 360d) % yearday() == 211')
+    n = n + 1
+
+    a = datetime(2014, 9, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 241, &
+                      'datetime(2014, 9, 1, 360d) % yearday() == 241')
+    n = n + 1
+
+    a = datetime(2014, 10, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 271, &
+                      'datetime(2014, 10, 1, 360d) % yearday() == 271')
+    n = n + 1
+
+    a = datetime(2014, 11, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 301, &
+                      'datetime(2014, 11, 1, 360d) % yearday() == 301')
+    n = n + 1
+
+    a = datetime(2014, 12, 1, cal_type=cal_360d)
+    tests(n) = assert(a % yearday() == 331, &
+                      'datetime(2014, 12, 1, 360d) % yearday() == 331')
+    n = n + 1
+
+    print '(71("-"))'
+
 
     ! Timedelta tests
     tests(n) = assert(timedelta() == timedelta(0, 0, 0, 0, 0), &
@@ -1000,83 +1130,252 @@ contains
 
     print '(71("-"))'
 
-    ! isLeapYear tests
-
-    tests(n) = assert(.not. isLeapYear(1), 'isLeapYear(1) == F')
+    ! isLeapYear(gregorian) tests
+    cal = calendar()
+    tests(n) = assert(.not. cal % isLeapYear(1), 'cal(gregorian) isLeapYear(1) == F')
     n = n + 1
 
-    tests(n) = assert(isLeapYear(4), 'isLeapYear(4) == T')
+    tests(n) = assert(cal % isLeapYear(4), 'cal(gregorian) isLeapYear(4) == T')
     n = n + 1
 
-    tests(n) = assert(.not. isLeapYear(100), 'isLeapYear(100) == F')
+    tests(n) = assert(.not. cal % isLeapYear(100), 'cal(gregorian) isLeapYear(100) == F')
     n = n + 1
 
-    tests(n) = assert(isLeapYear(400), 'isLeapYear(400) == T')
+    tests(n) = assert(cal % isLeapYear(400), 'cal(gregorian) isLeapYear(400) == T')
     n = n + 1
 
-    tests(n) = assert(isLeapYear(2000), 'isLeapYear(2000) == T')
+    tests(n) = assert(cal % isLeapYear(2000), 'cal(gregorian) isLeapYear(2000) == T')
     n = n + 1
 
-    tests(n) = assert(.not. isLeapYear(2014), 'isLeapYear(2014) == F')
-    n = n + 1
-
-    print '(71("-"))'
-
-    ! daysInYear
-
-    tests(n) = assert(daysInYear(2014) == 365, 'daysInYear(2014) == 365')
-    n = n + 1
-
-    tests(n) = assert(daysInYear(2012) == 366, 'daysInYear(2012) == 366')
-    n = n + 1
-
-    tests(n) = assert(daysInYear(2000) == 366, 'daysInYear(2000) == 366')
-    n = n + 1
-
-    tests(n) = assert(daysInYear(1900) == 365, 'daysInYear(1900) == 365')
+    tests(n) = assert(.not. cal % isLeapYear(2014), 'cal(gregorian) isLeapYear(2014) == F')
     n = n + 1
 
     print '(71("-"))'
 
-    ! daysInMonth
-
-    tests(n) = assert(daysInMonth(1, 2014) == 31, 'daysInMonth(1, 2014) == 31')
+    ! isLeapYear(no leap) tests
+    cal = calendar(cal_noleap)
+    tests(n) = assert(.not. cal % isLeapYear(1), 'cal(noleap) % isLeapYear(1) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(2, 2014) == 28, 'daysInMonth(2, 2014) == 28')
+    tests(n) = assert(.not. cal % isLeapYear(4), 'cal(noleap) % isLeapYear(4) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(2, 2012) == 29, 'daysInMonth(2, 2012) == 29')
+    tests(n) = assert(.not. cal % isLeapYear(100), 'cal(noleap) % isLeapYear(100) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(3, 2014) == 31, 'daysInMonth(3, 2014) == 31')
+    tests(n) = assert(.not. cal % isLeapYear(400), 'cal(noleap) % isLeapYear(400) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(4, 2014) == 30, 'daysInMonth(4, 2014) == 30')
+    tests(n) = assert(.not. cal % isLeapYear(2000), 'cal(noleap) % isLeapYear(2000) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(5, 2014) == 31, 'daysInMonth(5, 2014) == 31')
+    tests(n) = assert(.not. cal % isLeapYear(2014), 'cal(noleap) % isLeapYear(2014) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(6, 2014) == 30, 'daysInMonth(6, 2014) == 30')
+    print '(71("-"))'
+
+    ! isLeapYear(cal_360d) tests
+    cal = calendar(cal_360d)
+    tests(n) = assert(.not. cal % isLeapYear(1), 'cal(360d) % isLeapYear(1) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(7, 2014) == 31, 'daysInMonth(7, 2014) == 31')
+    tests(n) = assert(.not. cal % isLeapYear(4), 'cal(360d) % isLeapYear(4) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(8, 2014) == 31, 'daysInMonth(8, 2014) == 31')
+    tests(n) = assert(.not. cal % isLeapYear(100), 'cal(360d) % isLeapYear(100) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(9, 2014) == 30, 'daysInMonth(9, 2014) == 30')
+    tests(n) = assert(.not. cal % isLeapYear(400), 'cal(360d) % isLeapYear(400) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(10, 2014) == 31, 'daysInMonth(10, 2014) == 31')
+    tests(n) = assert(.not. cal % isLeapYear(2000), 'cal(360d) % isLeapYear(2000) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(11, 2014) == 30, 'daysInMonth(11, 2014) == 30')
+    tests(n) = assert(.not. cal % isLeapYear(2014), 'cal(360d) % isLeapYear(2014) == F')
     n = n + 1
 
-    tests(n) = assert(daysInMonth(12, 2014) == 31, 'daysInMonth(12, 2014) == 31')
+    print '(71("-"))'
+
+
+    ! daysInYear(gregorian)
+
+    cal = calendar(cal_gregorian)
+    tests(n) = assert(cal % getDaysInYear(2014) == 365, 'cal(gregorian) daysInYear(2014) == 365')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(2012) == 366, 'cal(gregorian) daysInYear(2012) == 366')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(2000) == 366, 'cal(gregorian) daysInYear(2000) == 366')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(1900) == 365, 'cal(gregorian) daysInYear(1900) == 365')
+    n = n + 1
+
+    print '(71("-"))'
+
+    ! daysInYear(noleap)
+
+    cal = calendar(cal_noleap)
+    tests(n) = assert(cal % getDaysInYear(2014) == 365, 'cal(noleap) daysInYear(2014) == 365')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(2012) == 365, 'cal(noleap) daysInYear(2012) == 365')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(2000) == 365, 'cal(noleap) daysInYear(2000) == 365')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(1900) == 365, 'cal(noleap) daysInYear(1900) == 365')
+    n = n + 1
+
+    print '(71("-"))'
+
+    ! daysInYear(360d)
+
+    cal = calendar(cal_360d)
+    tests(n) = assert(cal % getDaysInYear(2014) == 360, 'cal(360d) daysInYear(2014) == 360')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(2012) == 360, 'cal(360d) daysInYear(2012) == 360')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(2000) == 360, 'cal(360d) daysInYear(2000) == 360')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInYear(1900) == 360, 'cal(360d) daysInYear(1900) == 360')
+    n = n + 1
+
+    print '(71("-"))'
+
+    ! daysInMonth(gregorian)
+
+    cal = calendar(cal_gregorian)
+    tests(n) = assert(cal % getDaysInMonth(1, 2014) == 31, 'cal(gregorian) daysInMonth(1, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(2, 2014) == 28, 'cal(gregorian) daysInMonth(2, 2014) == 28')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(2, 2012) == 29, 'cal(gregorian) daysInMonth(2, 2012) == 29')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(3, 2014) == 31, 'cal(gregorian) daysInMonth(3, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(4, 2014) == 30, 'cal(gregorian) daysInMonth(4, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(5, 2014) == 31, 'cal(gregorian) daysInMonth(5, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(6, 2014) == 30, 'cal(gregorian) daysInMonth(6, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(7, 2014) == 31, 'cal(gregorian) daysInMonth(7, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(8, 2014) == 31, 'cal(gregorian) daysInMonth(8, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(9, 2014) == 30, 'cal(gregorian) daysInMonth(9, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(10, 2014) == 31, 'cal(gregorian) daysInMonth(10, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(11, 2014) == 30, 'cal(gregorian) daysInMonth(11, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(12, 2014) == 31, 'cal(gregorian) daysInMonth(12, 2014) == 31')
+    n = n + 1
+
+    print '(71("-"))'
+
+    ! daysInMonth(noleap)
+
+    cal = calendar(cal_noleap)
+    tests(n) = assert(cal % getDaysInMonth(1, 2014) == 31, 'cal(noleap) daysInMonth(1, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(2, 2014) == 28, 'cal(noleap) daysInMonth(2, 2014) == 28')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(2, 2012) == 28, 'cal(noleap) daysInMonth(2, 2012) == 28')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(3, 2014) == 31, 'cal(noleap) daysInMonth(3, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(4, 2014) == 30, 'cal(noleap) daysInMonth(4, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(5, 2014) == 31, 'cal(noleap) daysInMonth(5, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(6, 2014) == 30, 'cal(noleap) daysInMonth(6, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(7, 2014) == 31, 'cal(noleap) daysInMonth(7, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(8, 2014) == 31, 'cal(noleap) daysInMonth(8, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(9, 2014) == 30, 'cal(noleap) daysInMonth(9, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(10, 2014) == 31, 'cal(noleap) daysInMonth(10, 2014) == 31')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(11, 2014) == 30, 'cal(noleap) daysInMonth(11, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(12, 2014) == 31, 'cal(noleap) daysInMonth(12, 2014) == 31')
+    n = n + 1
+
+    print '(71("-"))'
+
+    ! daysInMonth(360d)
+
+    cal = calendar(cal_360d)
+    tests(n) = assert(cal % getDaysInMonth(1, 2014) == 30, 'cal(360d) daysInMonth(1, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(2, 2014) == 30, 'cal(360d) daysInMonth(2, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(2, 2012) == 30, 'cal(360d) daysInMonth(2, 2012) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(3, 2014) == 30, 'cal(360d) daysInMonth(3, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(4, 2014) == 30, 'cal(360d) daysInMonth(4, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(5, 2014) == 30, 'cal(360d) daysInMonth(5, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(6, 2014) == 30, 'cal(360d) daysInMonth(6, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(7, 2014) == 30, 'cal(360d) daysInMonth(7, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(8, 2014) == 30, 'cal(360d) daysInMonth(8, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(9, 2014) == 30, 'cal(360d) daysInMonth(9, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(10, 2014) == 30, 'cal(360d) daysInMonth(10, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(11, 2014) == 30, 'cal(360d) daysInMonth(11, 2014) == 30')
+    n = n + 1
+
+    tests(n) = assert(cal % getDaysInMonth(12, 2014) == 30, 'cal(360d) daysInMonth(12, 2014) == 30')
     n = n + 1
 
     print '(71("-"))'

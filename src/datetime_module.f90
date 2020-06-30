@@ -7,18 +7,16 @@ module datetime_module
 
   private
 
-  public :: datetime, timedelta, clock
+  public :: datetime, timedelta, clock, calendar
   public :: date2num
   public :: datetimeRange
-  public :: daysInMonth
-  public :: daysInYear
-  public :: isLeapYear
   public :: num2date
   public :: strptime
   public :: tm2date
   public :: tm_struct
   public :: c_strftime
   public :: c_strptime
+  public :: cal_gregorian, cal_noleap, cal_360d, cal_none
 
   real(real64), parameter :: zero = 0._real64, one = 1._real64
 
@@ -37,10 +35,43 @@ module datetime_module
  
   integer, parameter :: MAXSTRLEN = 99 ! maximum string length for strftime
 
+  integer, parameter :: MONTHS_YEAR = 12
+
+  type :: calendar
+     integer :: typeof 
+     integer, dimension(MONTHS_YEAR) :: daysInMonth
+     logical :: hasLeapYear
+     integer :: daysInYear
+     integer :: daysInLeapYear
+  contains
+     procedure, pass(self), public :: getDaysInMonth
+     procedure, pass(self), public :: getDaysInYear
+     procedure, pass(self), public :: isLeapYear
+  end type calendar
+
+  ! Constant calendar types
+  integer, parameter :: cal_none = -1 ! not defined
+  integer, parameter :: cal_gregorian = 0 ! modern calendar
+  integer, parameter :: cal_noleap = 1 ! no leap year (gregorian based)
+  integer, parameter :: cal_360d = 2 ! all months the same length (30 days)
+
+  interface calendar
+    module procedure :: calendar_constructor
+  endinterface calendar
+
+  integer, parameter :: days_gregorian(MONTHS_YEAR) = &
+                [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  integer, parameter :: days_noleap(MONTHS_YEAR) = &
+                [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  integer, parameter :: days_360(MONTHS_YEAR) = &
+                [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30]
+
+
   type :: datetime
 
     private
 
+    type(calendar) :: calendar_t ! calendar type [gregorian, no leap and 360d]
     integer :: year = 1 ! year [1-HUGE(year)]
     integer :: month = 1 ! month in year [1-12]
     integer :: day = 1 ! day in month [1-31]
@@ -215,7 +246,49 @@ module datetime_module
     procedure :: tick
   end type clock
 
+
 contains
+
+
+  pure elemental type(calendar) function calendar_constructor( &
+    calendar_type)
+    ! Constructor function for the `calendar` class.
+    integer, intent(in), optional :: calendar_type
+    integer :: calendar_to_use
+
+    calendar_to_use = cal_gregorian ! default calendar
+    if (present(calendar_type)) calendar_to_use = calendar_type
+
+    if (calendar_to_use .eq. cal_gregorian) then
+      calendar_constructor%daysInMonth = days_gregorian
+      calendar_constructor%typeof = cal_gregorian
+      calendar_constructor%hasLeapYear = .true.
+      calendar_constructor%daysInYear = 365 ! or 366 if leap year
+      calendar_constructor%daysInLeapYear = 366
+
+    else if (calendar_to_use .eq. cal_noleap) then
+      calendar_constructor%daysInMonth = days_noleap
+      calendar_constructor%typeof = cal_noleap
+      calendar_constructor%hasLeapYear = .false.
+      calendar_constructor%daysInYear = 365
+      calendar_constructor%daysInLeapYear = -1 
+
+    else if (calendar_to_use .eq. cal_360d) then
+      calendar_constructor%daysInMonth = days_360
+      calendar_constructor%typeof = cal_360d
+      calendar_constructor%hasLeapYear = .false.
+      calendar_constructor%daysInYear = 360
+      calendar_constructor%daysInLeapYear = -1
+
+    else  ! unexpected result 
+      calendar_constructor%daysInMonth = [0,0,0,0,0,0,0,0,0,0,0,0]
+      calendar_constructor%typeof = cal_none
+      calendar_constructor%hasLeapYear = .false.
+      calendar_constructor%daysInYear = 0
+      calendar_constructor%daysInLeapYear = -1
+    end if
+
+  end function calendar_constructor
 
 
   pure elemental subroutine reset(self)
@@ -241,10 +314,13 @@ contains
 
 
   pure elemental type(datetime) function datetime_constructor( &
-    year, month, day, hour, minute, second, millisecond, tz)
+    year, month, day, hour, minute, second, millisecond, tz, cal_type)
     ! Constructor function for the `datetime` class.
     integer, intent(in), optional :: year, month, day, hour, minute, second, millisecond
+    integer, intent(in), optional :: cal_type
     real(real64), intent(in), optional :: tz ! timezone offset in hours
+
+    integer :: cal_chosen
 
     datetime_constructor % year = 1
     if (present(year)) datetime_constructor % year = year
@@ -269,6 +345,10 @@ contains
 
     datetime_constructor % tz = 0
     if (present(tz)) datetime_constructor % tz = tz
+
+    cal_chosen = cal_gregorian
+    if (present(cal_type)) cal_chosen = cal_type
+    datetime_constructor % calendar_t = calendar(cal_chosen)
 
   end function datetime_constructor
 
@@ -417,7 +497,7 @@ contains
     integer :: daysInCurrentMonth
     self % day = self % day + d
     do
-      daysInCurrentMonth = daysInMonth(self % month, self % year)
+      daysInCurrentMonth = self % calendar_t % getDaysInMonth(self % month, self % year)
       if (self % day > daysInCurrentMonth) then
         self % day = self % day - daysInCurrentMonth
         self % month = self % month+1
@@ -431,7 +511,7 @@ contains
           self % year = self % year + self % month / 12 - 1
           self % month = 12 + mod(self % month, 12)
         end if
-        self % day = self % day + daysInMonth(self % month, self % year)
+        self % day = self % day + self % calendar_t % getDaysInMonth(self % month, self % year)
       else
         exit
       end if
@@ -485,7 +565,7 @@ contains
     end if
 
     if (self % day < 1 .or. &
-       self % day > daysInMonth(self % month,self % year)) then
+       self % day > self % calendar_t % getDaysInMonth(self % month,self % year)) then
       isValid = .false.
       return
     end if
@@ -719,7 +799,7 @@ contains
     integer :: month
     yearday = 0
     do month = 1, self % month-1
-      yearday = yearday + daysInMonth(month, self % year)
+      yearday = yearday + self % calendar_t % getDaysInMonth(month, self % year)
     end do
     yearday = yearday + self % day
   end function yearday
@@ -934,14 +1014,21 @@ contains
   end function datetime_le
 
 
-  pure elemental logical function isLeapYear(year)
+! to calendar
+  pure elemental logical function isLeapYear(self,year)
     ! Returns `.true.` if year is leap year and `.false.` otherwise.
+    class(calendar), intent(in) :: self
     integer, intent(in) :: year
-    isLeapYear = (mod(year,4) == 0 .and. .not. mod(year,100) == 0)&
+
+    isLeapYear = .false.
+    if (self % hasLeapYear) then
+      isLeapYear = (mod(year,4) == 0 .and. .not. mod(year,100) == 0)&
             .or. (mod(year,400) == 0)
+    end if
   end function isLeapYear
 
 
+! to calendar?
   pure function datetimeRange(d0, d1, t)
     ! Given start and end `datetime` instances `d0` and `d1` and time
     ! increment as `timedelta` instance `t`, returns an array of
@@ -964,40 +1051,39 @@ contains
   end function datetimeRange
 
 
-  pure elemental integer function daysInMonth(month,year)
+  pure elemental integer function getDaysInMonth(self,month,year)
     ! Given integer month and year, returns an integer number
     ! of days in that particular month.
+    class(calendar), intent(in) :: self
     integer, intent(in) :: month, year
-
-    integer, parameter :: days(*) = [31, 28, 31, 30, 31, 30, &
-                                     31, 31, 30, 31, 30, 31]
 
     if (month < 1 .or. month > 12) then
       ! Should raise an error and abort here, however we want to keep
       ! the pure and elemental attributes. Make sure this function is
       ! called with the month argument in range.
-      daysInMonth = 0
+      getDaysInMonth = 0
       return
     end if
 
-    if (month == 2 .and. isLeapYear(year)) then
-      daysInMonth = 29
+    if (month == 2 .and. self % isLeapYear(year)) then
+      getDaysInMonth = 29
     else
-      daysInMonth = days(month)
+      getDaysInMonth = self % daysInMonth(month) 
     end if
 
-  end function daysInMonth
+  end function getDaysInMonth
 
 
-  pure elemental integer function daysInYear(year)
+  pure elemental integer function getDaysInYear(self,year)
     ! Returns the number of days in year.
+    class(calendar), intent(in) :: self
     integer, intent(in) :: year
-    if (isLeapYear(year)) then
-      daysInYear = 366
+    if (self % isLeapYear(year)) then
+      getDaysInYear = self % daysInLeapYear
     else
-      daysInYear = 365
+      getDaysInYear = self % daysInYear
     end if
-  end function daysInYear
+  end function getDaysInYear
 
 
   pure elemental real(real64) function date2num(d)
@@ -1018,7 +1104,7 @@ contains
 
     date2num = 0
     do year = 1,d_utc % year-1
-      date2num = date2num + daysInYear(year)
+      date2num = date2num + d % calendar_t % getDaysInYear(year)
     end do
 
     date2num = date2num          &
@@ -1030,12 +1116,15 @@ contains
   end function date2num
 
 
-  pure elemental type(datetime) function num2date(num)
+  pure elemental type(datetime) function num2date(num, calendar_chosen)
     ! Given number of days since `0001-01-01 00:00:00`, returns a
     ! correspoding `datetime` instance.
     real(real64), intent(in) :: num
+    integer, optional, intent(in) :: calendar_chosen
     integer :: year, month, day, hour, minute, second, millisecond
     real(real64) :: days, totseconds
+    integer :: calendar_sel
+    type(calendar) :: calendar_t
 
     ! num must be positive
     if (num < 0) then
@@ -1045,17 +1134,20 @@ contains
 
     days = num
 
+    calendar_sel = cal_gregorian
+    if (present(calendar_chosen)) calendar_sel = calendar_chosen
+    calendar_t = calendar(calendar_sel)
     year = 1
     do
-      if (int(days) <= daysInYear(year))exit
-      days = days-daysInYear(year)
+      if (int(days) <= calendar_t % getDaysInYear(year))exit
+      days = days-calendar_t % getDaysInYear(year)
       year = year+1
     end do
 
     month = 1
     do
-      if (inT(days) <= daysInMonth(month,year))exit
-      days = days-daysInMonth(month,year)
+      if (inT(days) <= calendar_t % getDaysInMonth(month,year))exit
+      days = days-calendar_t % getDaysInMonth(month,year)
       month = month+1
     end do
 
@@ -1066,7 +1158,7 @@ contains
     second      = int(totseconds-hour*h2s-minute*m2s)
     millisecond = nint((totseconds-int(totseconds))*1e3_real64)
 
-    num2date = datetime(year,month,day,hour,minute,second,millisecond,tz=zero)
+    num2date = datetime(year,month,day,hour,minute,second,millisecond,tz=zero,cal_type=calendar_chosen)
 
     ! Handle a special case caused by floating-point arithmethic:
     if (num2date % millisecond == 1000) then
