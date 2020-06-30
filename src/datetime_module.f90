@@ -1014,7 +1014,6 @@ contains
   end function datetime_le
 
 
-! to calendar
   pure elemental logical function isLeapYear(self,year)
     ! Returns `.true.` if year is leap year and `.false.` otherwise.
     class(calendar), intent(in) :: self
@@ -1028,7 +1027,6 @@ contains
   end function isLeapYear
 
 
-! to calendar?
   pure function datetimeRange(d0, d1, t)
     ! Given start and end `datetime` instances `d0` and `d1` and time
     ! increment as `timedelta` instance `t`, returns an array of

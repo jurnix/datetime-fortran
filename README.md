@@ -67,7 +67,7 @@ ctest
 To start using datetime-fortran in your code by importing the module:
 
 ```fortran
-use datetime_module, only: datetime, timedelta, clock
+use datetime_module, only: datetime, timedelta, clock, calendar
 ```
 <a id="top"></a>
 
@@ -100,6 +100,10 @@ use datetime_module, only: datetime, timedelta, clock
     * [*clock*](#clock)
         * [*reset*](#reset)
         * [*tick*](#tick)
+    * [*calendar*](#calendar)
+        * [*getDaysInMonth*](#daysinmonth)
+        * [*getDaysInYear*](#daysinyear)
+        * [*isLeapYear*](#isleapyear)
     * [*tm_struct*](#tm_struct)
 * [Overloaded operators](#overloaded-operators)
     * [Arithmetic operators](#arithmetic-operators)
@@ -109,9 +113,6 @@ use datetime_module, only: datetime, timedelta, clock
     * [*c_strptime*](#c_strptime)
     * [*date2num*](#date2num)
     * [*datetimeRange*](#datetimerange)
-    * [*daysInMonth*](#daysinmonth)
-    * [*daysInYear*](#daysinyear)
-    * [*isLeapYear*](#isleapyear)
     * [*num2date*](#num2date)
     * [*strptime*](#strptime)
     * [*tm2date*](#tm2date)
@@ -120,7 +121,8 @@ use datetime_module, only: datetime, timedelta, clock
 
 *datetime-fortran* library provides the following derived types:
 [*datetime*](#datetime), [*timedelta*](#timedelta),  
-[*clock*](#clock) and [*tm_struct*](#tm_struct).
+[*clock*](#clock), [*calendar*](#calendar),
+ and [*tm_struct*](#tm_struct),
 
 ### datetime <a id="datetime"></a>
 
@@ -133,6 +135,7 @@ type :: datetime
 
   private
 
+  type(calendar) :: cal_type = gregorian !! calendar [gregorian, no leap, 360 days]
   integer :: year        = 1 !! year [1-HUGE(year)]
   integer :: month       = 1 !! month in year [1-12]
   integer :: day         = 1 !! day in month [1-31]
@@ -219,19 +222,19 @@ use datetime_module, only:datetime
 type(datetime) :: a
 
 ! Initialize as default:
-a = datetime() ! 0001-01-01 00:00:00
+a = datetime() ! 0001-01-01 00:00:00 gregorian
 
 ! Components can be specified by position:
-a = datetime(1984, 12, 10) ! 1984-12-10 00:00:00
+a = datetime(1984, 12, 10) ! 1984-12-10 00:00:00 gregorian
 
 ! Or by keyword:
-a = datetime(month=1, day=1, year=1970) ! 1970-01-01 00:00:00
+a = datetime(month=1, day=1, year=1970) ! 1970-01-01 00:00:00 gregorian
 
 ! Or combined:
-a = datetime(2013, 2, minute=23, day=5) ! 2013-02-05 00:23:00
+a = datetime(2013, 2, minute=23, day=5) ! 2013-02-05 00:23:00 gregorian
 
 ! With timezone offset:
-a = datetime(2013, 2, minute=23, day=5, tz=-4) ! 2013-02-05 00:23:00 -0400
+a = datetime(2013, 2, minute=23, day=5, tz=-4) ! 2013-02-05 00:23:00 -0400 gregorian
 
 ! Do not use positional after keyword arguments:
 a = datetime(year=2013, 2, minute=23, day=5) ! ILLEGAL
@@ -1033,6 +1036,161 @@ See [*clock*](#clock) for an example.
 [Back to top](#top)
 <hr>
 
+### **calendar**<a id="calendar"></a>
+
+A generic calendar object that contains the type of calendar,
+with the calendar type, how many days per months, how many days per year,
+and whether the calendaris leap.
+Most useful when needing to keep track of many [*datetime*](#datetime) instances
+that have different calendar types.
+
+Definition:
+
+```fortran
+  type :: calendar
+ 
+     !! A calendar object to define the calendar behaviour.
+     !! Whether is has leap years, how many days per months
+     !! and how many days per year.
+    
+     integer :: typeof 
+     integer, dimension(MONTHS_YEAR) :: daysInMonth
+     logical :: hasLeapYear
+     integer :: daysInYear
+     integer :: daysInLeapYear
+  contains
+     procedure, pass(self), public :: getDaysInMonth
+     procedure, pass(self), public :: getDaysInYear
+     procedure, pass(self), public :: isLeapYear
+  end type calendar
+```
+calendar instance must be initialized with the following types: cal_gregorian, cal_noleap, cal_360d. By default the gregorian calendar is selected.
+<hr>
+
+### getDaysInMonth<a id="getdaysinmonth"></a>
+
+```fortran
+pure elemental integer function getDaysInMonth(self,month,year)
+  class(calendar), intent(in) :: self
+  integer,intent(in) :: month
+  integer,intent(in) :: year
+```
+
+Returns the number of days in month for a given month and year.
+This function is declared as `elemental`, so it can be called
+with scalar or n-dimensional array arguments.
+
+#### Arguments
+
+`month` Integer number of month in year. Valid values are in the range [1-12].
+
+`year` Integer year.
+
+#### Return value
+
+Returns an integer number of days in requested month and year.
+Returns `0` if `month` is not in valid range.
+
+#### Example usage
+
+```fortran
+use datetime_module,only:calendar, cal_gregorian
+
+! January on leap year:
+write(*,*)calendar(cal_gregorian) % daysInMonth(1,2012)   ! 31
+
+! February on leap year:
+write(*,*)calendar(cal_gregorian) % daysInMonth(2,2012)   ! 29
+
+! February on non-leap year
+write(*,*)calendar(cal_gregorian) % daysInMonth(2,2013)   ! 28
+```
+
+#### See also
+
+* [*getDaysInYear*](#getdaysinyear)
+
+[Back to top](#top)
+<hr>
+
+### getDaysInYear<a id="getdaysinyear"></a>
+
+```fortran
+pure elemental integer Function getDaysInYear(self,year)
+  class(calendar), intent(in) :: self
+  integer,intent(in) :: year
+```
+
+Given an integer `year`, returns an integer number of days in that year.
+Calls the [*isLeapYear*](#isleapyear) function.
+
+#### Arguments
+
+`year` An `integer` scalar or array containing the desired year number(s).
+
+#### Return value
+
+`daysInYear` An `integer` scalar or array. Represents the number of days in `year`.
+
+#### Example usage
+
+```fortran
+use datetime_module,only:calendar, cal_gregorian
+
+! Leap year:
+write(*,*)calendar(cal_gregorian) % daysInYear(2012) ! 366
+
+! Non-leap year:
+write(*,*)calendar(cal_gregorian) % daysInYear(2013) ! 365
+```
+
+#### See also
+
+* [*getDaysInMonth*](#getdaysinmonth)
+
+* [*isLeapYear*](#isleapyear)
+
+[Back to top](#top)
+<hr>
+
+### isLeapYear<a id="isleapyear"></a>
+
+```fortran
+pure elemental logical function isLeapYear(self,year)
+  class(calendar), intent(in) :: self
+  integer,intent(in) :: year
+```
+
+Returns a `logical` value indicating whether the requested year is a leap year.
+
+#### Arguments
+
+`year` An `integer` scalar or array representing year number.
+
+#### Return value
+
+`isLeapYear` A `logical` scalar or array indicating whether a given year is leap year.
+
+#### Example usage
+
+```fortran
+use datetime_module,only:calendar, cal_gregorian
+
+! Leap year:
+write(*,*)calendar(cal_gregorian) % isLeapYear(2012) ! .true.
+
+! Non-leap year:
+write(*,*)calendar(cal_gregorian) % isLeapYear(2013) ! .false.
+```
+
+#### See also
+
+* [*getDaysInYear*](#getDaysInYear)
+
+[Back to top](#top)
+
+<hr>
+
 ### **tm_struct**<a id="tm_struct"></a>
 
 Time object compatible with C/C++ *tm* struct. Available mainly
@@ -1395,126 +1553,6 @@ dtRange = datetimeRange(a,b,td)
 * [*datetime*](#datetime)
 
 * [*timedelta*](#timedelta)
-
-[Back to top](#top)
-<hr>
-
-### daysInMonth<a id="daysinmonth"></a>
-
-```fortran
-pure elemental integer function daysInMonth(month,year)
-  integer,intent(in) :: month
-  integer,intent(in) :: year
-```
-
-Returns the number of days in month for a given month and year.
-This function is declared as `elemental`, so it can be called
-with scalar or n-dimensional array arguments.
-
-#### Arguments
-
-`month` Integer number of month in year. Valid values are in the range [1-12].
-
-`year` Integer year.
-
-#### Return value
-
-Returns an integer number of days in requested month and year.
-Returns `0` if `month` is not in valid range.
-
-#### Example usage
-
-```fortran
-use datetime_module,only:daysInMonth
-
-! January on leap year:
-write(*,*)daysInMonth(1,2012)   ! 31
-
-! February on leap year:
-write(*,*)daysInMonth(2,2012)   ! 29
-
-! February on non-leap year
-write(*,*)daysInMonth(2,2013)   ! 28
-```
-
-#### See also
-
-* [*daysInYear*](#daysinyear)
-
-[Back to top](#top)
-<hr>
-
-### daysInYear<a id="daysinyear"></a>
-
-```fortran
-pure elemental integer Function daysInYear(year)
-  integer,intent(in) :: year
-```
-
-Given an integer `year`, returns an integer number of days in that year.
-Calls the [*isLeapYear*](#isleapyear) function.
-
-#### Arguments
-
-`year` An `integer` scalar or array containing the desired year number(s).
-
-#### Return value
-
-`daysInYear` An `integer` scalar or array. Represents the number of days in `year`.
-
-#### Example usage
-
-```fortran
-use datetime_module,only:daysInYear
-
-! Leap year:
-write(*,*)daysInYear(2012) ! 366
-
-! Non-leap year:
-write(*,*)daysInYear(2013) ! 365
-```
-
-#### See also
-
-* [*daysInMonth*](#daysinmonth)
-
-* [*isLeapYear*](#isleapyear)
-
-[Back to top](#top)
-<hr>
-
-### isLeapYear<a id="isleapyear"></a>
-
-```fortran
-pure elemental logical function isLeapYear(year)
-  integer,intent(in) :: year
-```
-
-Returns a `logical` value indicating whether the reqested year is a leap year.
-
-#### Arguments
-
-`year` An `integer` scalar or array representing year number.
-
-#### Return value
-
-`isLeapYear` A `logical` scalar or array indicating whether a given year is leap year.
-
-#### Example usage
-
-```fortran
-use datetime_module,only:isLeapYear
-
-! Leap year:
-write(*,*)isLeapYear(2012) ! .true.
-
-! Non-leap year:
-write(*,*)isLeapYear(2013) ! .false.
-```
-
-#### See also
-
-* [*daysInYear*](#daysInYear)
 
 [Back to top](#top)
 <hr>
